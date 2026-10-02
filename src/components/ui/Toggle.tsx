@@ -15,8 +15,8 @@ export const Toggle = forwardRef<HTMLInputElement, Props>(function Toggle({ labe
       </span>
       <span className="relative inline-flex shrink-0">
         <input ref={ref} id={id} type="checkbox" role="switch" className="peer sr-only" {...rest} />
-        <span className="h-7 w-12 rounded-full bg-stone-300 transition-colors peer-checked:bg-stone-900 peer-focus-visible:ring-2 peer-focus-visible:ring-stone-800 peer-focus-visible:ring-offset-2 peer-disabled:opacity-60" />
-        <span className="pointer-events-none absolute left-1 top-1 h-5 w-5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-5" />
+        <span className="h-7 w-12 rounded-full bg-line-strong transition-colors duration-300 ease-lux peer-checked:bg-gradient-to-r peer-checked:from-brand-purple peer-checked:to-brand-aubergine peer-focus-visible:ring-2 peer-focus-visible:ring-accent peer-focus-visible:ring-offset-2 peer-disabled:opacity-60" />
+        <span className="pointer-events-none absolute left-1 top-1 h-5 w-5 rounded-full bg-white shadow transition-transform duration-300 ease-lux peer-checked:translate-x-5" />
       </span>
     </label>
   )

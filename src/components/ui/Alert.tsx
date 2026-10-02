@@ -4,7 +4,7 @@ export function Alert({ children, tone = 'error' }: { children: ReactNode; tone?
   return (
     <div
       role={tone === 'error' ? 'alert' : 'status'}
-      className={`rounded-lg px-4 py-3 text-sm ${tone === 'error' ? 'bg-red-50 text-red-900 ring-1 ring-red-200' : 'bg-amber-50 text-amber-900 ring-1 ring-amber-200'}`}
+      className={`rounded-xl border-l-4 px-4 py-3 text-sm ${tone === 'error' ? 'border-danger bg-danger-soft text-[#7d1a2b]' : 'border-brand-purple bg-[#f5effb] text-brand-aubergine'}`}
     >
       {children}
     </div>

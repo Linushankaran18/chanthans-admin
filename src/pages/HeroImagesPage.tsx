@@ -101,10 +101,11 @@ export default function HeroImagesPage() {
 
   return (
     <div>
-      <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between animate-fade-up">
         <div>
-          <h1 className="font-display text-4xl font-semibold sm:text-5xl">Hero Images</h1>
-          <p className="mt-2 text-ink-soft">Manage the images displayed on the website homepage.</p>
+          <p className="eyebrow">Website</p>
+          <h1 className="page-title mt-3">Hero Images</h1>
+          <p className="mt-3 max-w-xl text-ink-soft">Manage the images displayed on the website homepage.</p>
         </div>
         <Button onClick={() => setModal({ type: 'add' })} className="w-full sm:w-auto">
           <Plus className="h-4 w-4" aria-hidden />
@@ -112,7 +113,7 @@ export default function HeroImagesPage() {
         </Button>
       </div>
 
-      <div className="mt-10">
+      <div className="mt-12">
         {isLoading ? (
           <HeroImageSkeleton />
         ) : isError ? (

@@ -9,10 +9,14 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const styles: Record<Variant, string> = {
-  primary: 'bg-accent text-white hover:bg-accent-hover',
-  secondary: 'border border-stone-300 bg-white text-ink hover:bg-stone-50',
-  danger: 'bg-red-700 text-white hover:bg-red-800 focus-visible:ring-red-700',
-  ghost: 'text-ink-soft hover:bg-stone-100',
+  primary: 'bg-gradient-to-br from-accent to-brand-aubergine text-white shadow-[0_10px_24px_-12px_rgba(74,29,110,0.7)] hover:-translate-y-0.5 hover:shadow-[0_16px_30px_-12px_rgba(74,29,110,0.65)] active:translate-y-0',
+  secondary: 'border border-line-strong bg-white text-ink hover:-translate-y-0.5 hover:border-accent/50 hover:text-accent',
+  danger: 'bg-danger text-white hover:-translate-y-0.5 hover:bg-danger-hover focus-visible:ring-danger',
+  ghost: 'text-ink-soft hover:bg-cream-deep hover:text-ink',
+}
+
+export function buttonClasses(variant: Variant = 'primary', className = ''): string {
+  return `inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full px-6 text-sm font-medium tracking-wide transition-all duration-300 ease-lux disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 ${styles[variant]} ${className}`
 }
 
 export function Button({ variant = 'primary', loading, disabled, className = '', children, type = 'button', ...rest }: Props) {
@@ -21,7 +25,7 @@ export function Button({ variant = 'primary', loading, disabled, className = '',
       type={type}
       disabled={disabled || loading}
       aria-busy={loading || undefined}
-      className={`inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg px-5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${styles[variant]} ${className}`}
+      className={buttonClasses(variant, className)}
       {...rest}
     >
       {loading && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}

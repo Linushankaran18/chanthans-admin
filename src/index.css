@@ -3,6 +3,36 @@
 @tailwind utilities;
 
 @layer base {
-  body { @apply bg-paper font-sans text-ink antialiased; }
-  :focus-visible { @apply outline-none ring-2 ring-offset-2 ring-stone-800; }
+  body { @apply bg-cream font-sans text-ink antialiased; }
+  :focus-visible { @apply outline-none ring-2 ring-offset-2 ring-accent; }
+}
+
+@layer components {
+  .eyebrow { @apply text-[0.68rem] font-medium uppercase tracking-luxe text-ink-mute; }
+  .page-title { @apply font-display text-4xl font-light leading-[1.05] text-ink sm:text-5xl; }
+  .card-surface { @apply rounded-2xl border border-line bg-white shadow-soft; }
+  .brand-bar { @apply bg-brand-gradient; }
+  .text-brand-gradient { @apply bg-brand-gradient bg-clip-text text-transparent; }
+  .input-field {
+    @apply min-h-[44px] w-full rounded-xl border border-line-strong bg-cream px-4 text-base text-ink transition-all duration-300 ease-lux placeholder:text-muted-light sm:text-sm;
+  }
+  .input-field:hover { @apply border-muted-light; }
+  .input-field:focus { @apply border-accent bg-white outline-none ring-2 ring-accent/25 ring-offset-0; }
+  .shimmer { @apply relative overflow-hidden bg-cream-deep; }
+  .shimmer::after {
+    content: '';
+    @apply absolute inset-0 -translate-x-full;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.7), transparent);
+    animation: shimmer 1.6s infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .shimmer::after { display: none; }
 }

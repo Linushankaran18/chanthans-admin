@@ -94,7 +94,7 @@ export function HeroImageFormModal({ image, defaultOrder, submitting, progress, 
               type="button"
               disabled={submitting}
               onClick={() => fileInput.current?.click()}
-              className="group relative flex aspect-[16/9] w-full items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-stone-300 bg-stone-50 text-ink-soft hover:border-stone-500 disabled:opacity-70"
+              className="group relative flex aspect-[16/9] w-full items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-line-strong bg-cream text-ink-soft transition-colors duration-300 hover:border-accent hover:text-accent disabled:opacity-70"
             >
               {shownPreview ? (
                 <img src={shownPreview} alt="Selected image preview" className="h-full w-full object-cover" />
@@ -114,7 +114,7 @@ export function HeroImageFormModal({ image, defaultOrder, submitting, progress, 
             <p id="hero-image-hint" className="mt-1.5 text-xs text-ink-mute">
               Recommended: landscape image, at least 1920px wide. JPEG, PNG or WebP, up to 10 MB.
             </p>
-            <p id="hero-image-error" role="alert" className="mt-1.5 text-sm text-red-700">{fileError}</p>
+            <p id="hero-image-error" role="alert" className="mt-1.5 text-sm text-danger">{fileError}</p>
           </div>
         )}
 
@@ -143,8 +143,8 @@ export function HeroImageFormModal({ image, defaultOrder, submitting, progress, 
 
         {submitting && progress !== null && !isEdit && (
           <div>
-            <div className="h-2 overflow-hidden rounded-full bg-stone-200" role="progressbar" aria-label="Upload progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}>
-              <div className="h-full bg-stone-900 transition-all" style={{ width: `${progress}%` }} />
+            <div className="h-2 overflow-hidden rounded-full bg-cream-deep" role="progressbar" aria-label="Upload progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}>
+              <div className="h-full bg-brand-gradient transition-all" style={{ width: `${progress}%` }} />
             </div>
             <p className="mt-1 text-xs text-ink-mute">{progress < 100 ? `Uploading… ${progress}%` : 'Finishing up…'}</p>
           </div>
