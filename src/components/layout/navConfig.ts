@@ -1,4 +1,4 @@
-import { CalendarDays, LayoutDashboard, Image as ImageIcon, Plug, type LucideIcon } from 'lucide-react'
+import { CalendarDays, LayoutDashboard, Image as ImageIcon, Plug, Receipt, type LucideIcon } from 'lucide-react'
 
 export interface NavItem {
   label: string
@@ -12,6 +12,7 @@ export interface NavItem {
 export const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', to: '/dashboard', icon: LayoutDashboard, end: true },
   { label: 'Bookings', to: '/dashboard/bookings', icon: CalendarDays },
+  { label: 'Invoices', to: '/dashboard/invoices', icon: Receipt },
   { label: 'Hero Images', to: '/dashboard/hero-images', icon: ImageIcon },
   { label: 'Integrations', to: '/dashboard/integrations', icon: Plug },
 ]

@@ -95,6 +95,23 @@ export function formatMoney(value: number | null | undefined): string {
   return moneyFormatter.format(value)
 }
 
+const currencyFormatters = new Map<string, Intl.NumberFormat>()
+
+/** Money in a specific currency, e.g. CAD -> "$2,500.00" (same format the PDF uses). */
+export function formatMoneyIn(value: number | null | undefined, currency: string): string {
+  if (value === null || value === undefined || Number.isNaN(value)) return '—'
+  let fmt = currencyFormatters.get(currency)
+  if (!fmt) {
+    try {
+      fmt = new Intl.NumberFormat('en-CA', { style: 'currency', currency })
+    } catch {
+      fmt = new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' })
+    }
+    currencyFormatters.set(currency, fmt)
+  }
+  return fmt.format(value)
+}
+
 export function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean)
   if (parts.length === 0) return '?'

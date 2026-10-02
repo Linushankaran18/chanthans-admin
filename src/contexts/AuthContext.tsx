@@ -10,6 +10,8 @@ interface AuthContextValue {
   /** Message to show on the login page (e.g. session expired). */
   sessionMessage: string | null
   login: (email: string, password: string) => Promise<void>
+  /** Adopts an already-issued dashboard token (e.g. from Google sign-in). */
+  loginWithToken: (token: string) => void
   logout: () => void
   clearSessionMessage: () => void
 }
@@ -34,6 +36,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(res.access_token)
   }, [])
 
+  const loginWithToken = useCallback((newToken: string) => {
+    tokenStorage.set(newToken)
+    setSessionMessage(null)
+    setToken(newToken)
+  }, [])
+
   useEffect(() => {
     setUnauthorizedHandler(() => {
       if (!tokenStorage.get()) return
@@ -48,10 +56,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAuthenticated: !!token,
       sessionMessage,
       login,
+      loginWithToken,
       logout,
       clearSessionMessage: () => setSessionMessage(null),
     }),
-    [token, sessionMessage, login, logout],
+    [token, sessionMessage, login, loginWithToken, logout],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

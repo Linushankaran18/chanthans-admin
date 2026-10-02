@@ -114,3 +114,52 @@ export function googleReturnMessage(reason: string | null): string {
     default: return 'We could not connect Google Calendar. Please try again.'
   }
 }
+
+const GOOGLE_ERRORS: Record<string, string> = {
+  denied: 'Google sign-in was cancelled.',
+  not_allowed: "This Google account isn't authorised to use the dashboard.",
+  not_verified: "Your Google email isn't verified.",
+  invalid_state: 'The sign-in attempt expired. Please try again.',
+  exchange_failed: "We couldn't complete Google sign-in. Please try again.",
+  not_configured: "Google sign-in isn't available right now.",
+}
+
+/** Friendly message for a `google_error` code from the backend redirect. */
+export function googleErrorMessage(code: string): string {
+  return GOOGLE_ERRORS[code] ?? GOOGLE_ERRORS.exchange_failed
+}
+
+// ---- Invoices ----------------------------------------------------------------
+
+/** The existing invoice id when the API answered 409 invoice_exists, else null. */
+export function getInvoiceExists(error: unknown): string | null {
+  if (!axios.isAxiosError(error) || error.response?.status !== 409) return null
+  const body: unknown = error.response.data
+  if (isRecord(body) && body.code === 'invoice_exists' && typeof body.invoice_id === 'string') return body.invoice_id
+  return null
+}
+
+/** Friendly message for a failed invoice save / action. Never exposes raw API text. */
+export function invoiceActionFailedMessage(error: unknown, action: string): string {
+  const s = status(error)
+  if (s === 401) return SESSION_EXPIRED_MESSAGE
+  if (s === 404) return 'This invoice no longer exists. It may have been deleted.'
+  if (s === 400) return `Could not ${action}. That isn't allowed for this invoice's current status.`
+  if (s === 409) return `Could not ${action}. Something changed in the meantime — please refresh and try again.`
+  if (s === 422) return `Could not ${action}. Please check the highlighted details and try again.`
+  if (isNetwork(error)) return `Could not ${action}. Please check your connection and try again.`
+  return `Could not ${action}. Please try again.`
+}
+
+export function pdfFailedMessage(error: unknown): string {
+  const s = status(error)
+  if (s === 401) return SESSION_EXPIRED_MESSAGE
+  if (isNetwork(error)) return 'Unable to generate the PDF. Please check your connection and try again.'
+  return 'Unable to generate the PDF. Please try again.'
+}
+
+/** Deleting a booking is refused while it still has an invoice (409). */
+export function bookingDeleteFailedMessage(error: unknown): string {
+  if (status(error) === 409) return 'This booking has an invoice. Cancel and delete the invoice first, then try again.'
+  return actionFailedMessage(error, 'delete the booking')
+}

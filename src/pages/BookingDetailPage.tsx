@@ -14,11 +14,12 @@ import { Avatar } from '../components/bookings/Avatar'
 import { BookingTimeline } from '../components/bookings/BookingTimeline'
 import { CalendarSyncCard } from '../components/bookings/CalendarSyncCard'
 import { ConflictPanel } from '../components/bookings/ConflictPanel'
+import { BookingInvoiceCard } from '../components/invoices/BookingInvoiceCard'
 import { PaymentSummary } from '../components/bookings/PaymentSummary'
 import { StatusChanger } from '../components/bookings/StatusChanger'
 import { useBooking, useChangeBookingStatus, useDeleteBooking } from '../hooks/useBookings'
 import { useToast } from '../contexts/ToastContext'
-import { actionFailedMessage, getBookingConflict, isNotFound, loadFailedMessage } from '../utils/errors'
+import { actionFailedMessage, bookingDeleteFailedMessage, getBookingConflict, isNotFound, loadFailedMessage } from '../utils/errors'
 import { STATUS_META } from '../utils/bookingStatus'
 import { formatDate, formatDateLong, formatTimeRange } from '../utils/format'
 import type { BookingConflictItem, BookingStatus } from '../types/booking'
@@ -75,7 +76,7 @@ export default function BookingDetailPage() {
   function doDelete() {
     remove.mutate(b.id, {
       onSuccess: () => { toast.success('Booking deleted.'); navigate('/dashboard/bookings', { replace: true }) },
-      onError: (e) => { setConfirm(null); toast.error(actionFailedMessage(e, 'delete the booking')) },
+      onError: (e) => { setConfirm(null); toast.error(bookingDeleteFailedMessage(e)) },
     })
   }
 
@@ -146,6 +147,8 @@ export default function BookingDetailPage() {
           <CardHeader title="Payment" icon={CreditCard} />
           <PaymentSummary total={b.total_amount} deposit={b.deposit_amount} />
         </Card>
+
+        <BookingInvoiceCard bookingId={b.id} />
 
         <Card as="section">
           <CardHeader title="Delivery" icon={PackageCheck} />
