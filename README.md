@@ -25,7 +25,7 @@ This is the only configuration the app uses. Never put database credentials, R2 
 - Build command: `npm run build`
 - Build output directory: `dist`
 - Environment variable (Settings -> Environment variables): `VITE_API_BASE_URL` = your production API URL, e.g. `https://api.example.com/api/v1`. It is baked in at build time, so redeploy after changing it.
-- SPA routing: `public/_redirects` contains `/* /index.html 200`, so direct links such as `/dashboard/hero-images` work.
+- SPA routing: `wrangler.jsonc` sets `not_found_handling: single-page-application`, so direct links such as `/dashboard/hero-images` work. Do not add a `_redirects` file with `/* /index.html 200`: Cloudflare rejects it as an infinite loop. (Classic Pages serves `index.html` for unknown paths without any config.)
 
 ## CORS
 
