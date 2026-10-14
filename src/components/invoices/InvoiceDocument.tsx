@@ -65,7 +65,7 @@ export function InvoiceDocument({ data, settings }: { data: InvoiceDocumentData;
   const meta = INVOICE_STATUS_META[data.status]
   const StatusIcon = meta.icon
   const watermark = data.status === 'DRAFT' ? 'DRAFT' : data.status === 'CANCELLED' ? 'CANCELLED' : null
-  const businessLines = [...(settings?.business_address ?? '').split('\n'), settings?.business_phone ?? '', settings?.business_email ?? '', settings?.business_website ?? '']
+  const businessLines = [...(settings?.business_address ?? '').split('\n'), settings?.business_phone ?? '', settings?.business_website ?? '']
     .map((l) => l.trim())
     .filter(Boolean)
   const logo = settings?.business_logo_url || LOGO_FALLBACK
@@ -180,7 +180,7 @@ export function InvoiceDocument({ data, settings }: { data: InvoiceDocumentData;
         )}
 
         <footer className="mt-10 border-t border-line pt-3 text-center text-[0.7rem] text-ink-mute">
-          {[settings?.business_name, settings?.business_website, settings?.business_email, settings?.business_phone].filter(Boolean).join('  ·  ')}
+          {[settings?.business_name, settings?.business_website, settings?.business_phone].filter(Boolean).join('  ·  ')}
         </footer>
       </div>
     </article>
