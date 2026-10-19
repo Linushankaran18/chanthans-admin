@@ -41,6 +41,8 @@ export interface BookingSummary {
 export interface Booking extends BookingSummary {
   notes: string | null
   google_calendar_event_id: string | null
+  /** A team share link is currently active. */
+  is_shared: boolean
 }
 
 export type BookingSort = 'date_desc' | 'date_asc' | 'created_desc'
@@ -78,6 +80,8 @@ export interface BookingInput {
   deposit_amount?: number | null
   delivery_due_date?: string | null
   notes?: string | null
+  /** Owner accepted overlapping a confirmed booking (never stored). */
+  allow_overlap?: boolean
 }
 
 export interface BookingConflictItem {

@@ -14,11 +14,13 @@ import InvoiceEditPage from './pages/InvoiceEditPage'
 import InvoiceDetailPage from './pages/InvoiceDetailPage'
 import GoogleCompletePage from './pages/GoogleCompletePage'
 import IntegrationsPage from './pages/IntegrationsPage'
+import SharedEventPage from './pages/SharedEventPage'
 
 export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/share/:token" element={<SharedEventPage />} />
       <Route path="/auth/google/complete" element={<GoogleCompletePage />} />
       <Route element={<PublicOnlyRoute />}>
         <Route path="/login" element={<LoginPage />} />

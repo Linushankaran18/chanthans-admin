@@ -11,7 +11,8 @@ import { Button, buttonClasses } from '../components/ui/Button'
 import { InvoiceDocument, invoiceToDocument } from '../components/invoices/InvoiceDocument'
 import { InvoiceStatusBadge } from '../components/invoices/InvoiceStatusBadge'
 import { RecordPaymentModal } from '../components/invoices/RecordPaymentModal'
-import { useChangeInvoiceStatus, useDeleteInvoice, useInvoice, useInvoiceSettings, useRecordPayment } from '../hooks/useInvoices'
+import { DeleteInvoiceDialog } from '../components/invoices/DeleteInvoiceDialog'
+import { useChangeInvoiceStatus, useInvoice, useInvoiceSettings, useRecordPayment } from '../hooks/useInvoices'
 import { useInvoicePdf } from '../hooks/useInvoicePdf'
 import { useToast } from '../contexts/ToastContext'
 import { invoiceActionFailedMessage, isNotFound, loadFailedMessage } from '../utils/errors'
@@ -37,7 +38,6 @@ export default function InvoiceDetailPage() {
   const settings = useInvoiceSettings()
   const changeStatus = useChangeInvoiceStatus()
   const payment = useRecordPayment()
-  const remove = useDeleteInvoice()
   const pdf = useInvoicePdf(invoice.data)
   const [dialog, setDialog] = useState<Dialog>(null)
   const [paymentError, setPaymentError] = useState<string | null>(null)
@@ -80,18 +80,10 @@ export default function InvoiceDetailPage() {
       onError: (e) => setPaymentError(invoiceActionFailedMessage(e, 'record the payment')),
     })
   }
-  function doDelete() {
-    remove.mutate({ id: inv.id, bookingId: inv.booking_id }, {
-      onSuccess: () => { toast.success('Invoice deleted.'); navigate('/dashboard/invoices', { replace: true }) },
-      onError: (e) => { setDialog(null); toast.error(invoiceActionFailedMessage(e, 'delete the invoice')) },
-    })
-  }
-
   const menu: MenuItem[] = [
     { label: 'Preview PDF', icon: Eye, onSelect: pdf.preview, disabled: pdf.busy !== null },
     ...(caps.canRecordPayment ? [{ label: 'Record payment', icon: Wallet, onSelect: () => { setPaymentError(null); setDialog('payment') } }] : []),
     ...(caps.canCancel ? [{ label: 'Cancel invoice', icon: Ban, danger: true, onSelect: () => setDialog('cancel') }] : []),
-    ...(caps.canDelete ? [{ label: 'Delete invoice', icon: Trash2, danger: true, onSelect: () => setDialog('delete') }] : []),
   ]
 
   return (
@@ -119,6 +111,7 @@ export default function InvoiceDetailPage() {
               trigger={<MoreHorizontal className="h-5 w-5" aria-hidden />}
               triggerClassName="w-11 border border-line-strong bg-white text-ink hover:border-accent/50 hover:text-accent"
             />
+            <Button variant="danger" onClick={() => setDialog('delete')}><Trash2 className="h-4 w-4" aria-hidden /> Delete</Button>
           </>
         }
       />
@@ -156,15 +149,7 @@ export default function InvoiceDetailPage() {
         />
       )}
       {dialog === 'delete' && (
-        <ConfirmDialog
-          title="Delete invoice?"
-          description={`This permanently deletes ${inv.invoice_number}. The booking stays, and you can create a new invoice for it. This can't be undone.`}
-          cancelLabel="Keep Invoice"
-          confirmLabel="Delete Invoice"
-          loading={remove.isPending}
-          onCancel={() => setDialog(null)}
-          onConfirm={doDelete}
-        />
+        <DeleteInvoiceDialog invoice={inv} onClose={() => setDialog(null)} onDeleted={() => navigate('/dashboard/invoices', { replace: true })} />
       )}
     </div>
   )

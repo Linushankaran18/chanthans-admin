@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { SearchX } from 'lucide-react'
 import { PageHeader } from '../components/ui/PageHeader'
@@ -25,6 +25,7 @@ export default function BookingEditPage() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [conflicts, setConflicts] = useState<BookingConflictItem[] | null>(null)
 
+  const lastValues = useRef<BookingFormValues | null>(null)
   const detailPath = `/dashboard/bookings/${id}`
 
   if (booking.isLoading) {
@@ -44,9 +45,10 @@ export default function BookingEditPage() {
 
   const b = booking.data
 
-  function submit(values: BookingFormValues) {
+  function submit(values: BookingFormValues, allowOverlap = false) {
+    lastValues.current = values
     setError(null); setConflicts(null); setFieldErrors({})
-    update.mutate({ id: b.id, input: formToInput(values, false) }, {
+    update.mutate({ id: b.id, input: formToInput(values, false, allowOverlap) }, {
       onSuccess: () => {
         toast.success('Booking updated.')
         navigate(detailPath, { replace: true })
@@ -72,7 +74,8 @@ export default function BookingEditPage() {
         fieldErrors={fieldErrors}
         conflicts={conflicts}
         cancelTo={detailPath}
-        onSubmit={submit}
+        onSubmit={(v) => submit(v)}
+        onOverride={() => lastValues.current && submit(lastValues.current, true)}
       />
     </div>
   )

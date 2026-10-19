@@ -8,10 +8,13 @@ import { formatDate, formatTimeRange } from '../../utils/format'
 interface Props {
   conflicts: BookingConflictItem[]
   onChangeTime: () => void
+  /** When given, the owner may knowingly keep the overlap ("Confirm Anyway"). */
+  onOverride?: () => void
+  overriding?: boolean
   className?: string
 }
 
-export function ConflictPanel({ conflicts, onChangeTime, className = '' }: Props) {
+export function ConflictPanel({ conflicts, onChangeTime, onOverride, overriding, className = '' }: Props) {
   const first = conflicts[0]
   return (
     <section role="alert" aria-labelledby="conflict-title" className={`rounded-2xl border border-[#f2dca6] bg-[#fdf3dc] p-5 text-[#5c3800] ${className}`}>
@@ -20,7 +23,7 @@ export function ConflictPanel({ conflicts, onChangeTime, className = '' }: Props
         <div className="min-w-0 flex-1">
           <h2 id="conflict-title" className="font-display text-3xl font-normal leading-tight">Scheduling conflict</h2>
           <p className="mt-1 text-sm">
-            {conflicts.length > 1 ? 'These confirmed bookings overlap' : 'Another confirmed booking overlaps'} with this time. Pick a different time, or review the existing {conflicts.length > 1 ? 'bookings' : 'booking'} first.
+            {conflicts.length > 1 ? 'These confirmed bookings overlap' : 'Another confirmed booking overlaps'} with this time. Pick a different time, review the existing {conflicts.length > 1 ? 'bookings' : 'booking'}{onOverride ? ', or confirm anyway if you can handle both' : ''}.
           </p>
           <ul className="mt-4 space-y-2">
             {conflicts.map((c) => (
@@ -46,6 +49,7 @@ export function ConflictPanel({ conflicts, onChangeTime, className = '' }: Props
               </Link>
             )}
             <Button onClick={onChangeTime}>Change Time</Button>
+            {onOverride && <Button variant="secondary" onClick={onOverride} loading={overriding}>Confirm Anyway</Button>}
           </div>
         </div>
       </div>

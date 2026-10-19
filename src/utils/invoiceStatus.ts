@@ -42,3 +42,15 @@ export function invoiceCapabilities(status: InvoiceStatus) {
     canDelete: status === 'DRAFT' || status === 'CANCELLED',
   }
 }
+
+export type InvoiceDeleteMode = 'delete' | 'cancel_then_delete' | 'blocked'
+
+/**
+ * How an invoice can be removed. Drafts and cancelled invoices go straight away; an issued invoice
+ * with no payments is cancelled first. Anything with money recorded is a financial record and stays.
+ */
+export function invoiceDeleteMode(invoice: Pick<InvoiceSummary, 'status' | 'amount_paid'>): InvoiceDeleteMode {
+  if (invoice.status === 'DRAFT' || invoice.status === 'CANCELLED') return 'delete'
+  if (invoice.status === 'ISSUED' && invoice.amount_paid <= 0) return 'cancel_then_delete'
+  return 'blocked'
+}

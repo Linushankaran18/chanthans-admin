@@ -13,13 +13,16 @@ import { buttonClasses } from '../components/ui/Button'
 import { Avatar } from '../components/bookings/Avatar'
 import { BookingTimeline } from '../components/bookings/BookingTimeline'
 import { CalendarSyncCard } from '../components/bookings/CalendarSyncCard'
+import { DeleteBookingDialog } from '../components/bookings/DeleteBookingDialog'
+import { ShareCard } from '../components/bookings/ShareCard'
+import { Button } from '../components/ui/Button'
 import { ConflictPanel } from '../components/bookings/ConflictPanel'
 import { BookingInvoiceCard } from '../components/invoices/BookingInvoiceCard'
 import { PaymentSummary } from '../components/bookings/PaymentSummary'
 import { StatusChanger } from '../components/bookings/StatusChanger'
-import { useBooking, useChangeBookingStatus, useDeleteBooking } from '../hooks/useBookings'
+import { useBooking, useChangeBookingStatus } from '../hooks/useBookings'
 import { useToast } from '../contexts/ToastContext'
-import { actionFailedMessage, bookingDeleteFailedMessage, getBookingConflict, isNotFound, loadFailedMessage } from '../utils/errors'
+import { actionFailedMessage, getBookingConflict, isNotFound, loadFailedMessage } from '../utils/errors'
 import { STATUS_META } from '../utils/bookingStatus'
 import { formatDate, formatDateLong, formatTimeRange } from '../utils/format'
 import type { BookingConflictItem, BookingStatus } from '../types/booking'
@@ -40,9 +43,9 @@ export default function BookingDetailPage() {
   const toast = useToast()
   const booking = useBooking(id)
   const changeStatus = useChangeBookingStatus()
-  const remove = useDeleteBooking()
   const [confirm, setConfirm] = useState<'cancel' | 'delete' | null>(null)
   const [conflicts, setConflicts] = useState<BookingConflictItem[] | null>(null)
+  const [pendingStatus, setPendingStatus] = useState<BookingStatus | null>(null)
 
   if (booking.isLoading) return <DetailSkeleton />
   if (booking.isError || !booking.data) {
@@ -55,10 +58,11 @@ export default function BookingDetailPage() {
   const b = booking.data
   const editPath = `/dashboard/bookings/${b.id}/edit`
 
-  function move(status: BookingStatus) {
+  function move(status: BookingStatus, allowOverlap = false) {
     setConflicts(null)
-    changeStatus.mutate({ id: b.id, status }, {
-      onSuccess: () => { setConfirm(null); toast.success(STATUS_META[status].toast) },
+    setPendingStatus(status)
+    changeStatus.mutate({ id: b.id, status, allowOverlap }, {
+      onSuccess: () => { setConfirm(null); setPendingStatus(null); toast.success(STATUS_META[status].toast) },
       onError: (e) => {
         setConfirm(null)
         const conflict = getBookingConflict(e)
@@ -73,16 +77,8 @@ export default function BookingDetailPage() {
     else move(status)
   }
 
-  function doDelete() {
-    remove.mutate(b.id, {
-      onSuccess: () => { toast.success('Booking deleted.'); navigate('/dashboard/bookings', { replace: true }) },
-      onError: (e) => { setConfirm(null); toast.error(bookingDeleteFailedMessage(e)) },
-    })
-  }
-
   const menu: MenuItem[] = [
     ...(b.allowed_next_statuses.includes('CANCELLED') ? [{ label: 'Cancel booking', icon: Ban, danger: true, onSelect: () => setConfirm('cancel') }] : []),
-    { label: 'Delete booking', icon: Trash2, danger: true, onSelect: () => setConfirm('delete') },
   ]
 
   const terminal = b.allowed_next_statuses.length === 0
@@ -98,17 +94,20 @@ export default function BookingDetailPage() {
           <>
             <Link to={editPath} className={buttonClasses('secondary')}><Pencil className="h-4 w-4" aria-hidden /> Edit</Link>
             <StatusChanger booking={b} disabled={changeStatus.isPending} onSelect={onSelectStatus} />
-            <DropdownMenu
-              label="More actions"
-              items={menu}
-              trigger={<MoreHorizontal className="h-5 w-5" aria-hidden />}
-              triggerClassName="w-11 border border-line-strong bg-white text-ink hover:border-accent/50 hover:text-accent"
-            />
+            {menu.length > 0 && (
+              <DropdownMenu
+                label="More actions"
+                items={menu}
+                trigger={<MoreHorizontal className="h-5 w-5" aria-hidden />}
+                triggerClassName="w-11 border border-line-strong bg-white text-ink hover:border-accent/50 hover:text-accent"
+              />
+            )}
+            <Button variant="danger" onClick={() => setConfirm('delete')}><Trash2 className="h-4 w-4" aria-hidden /> Delete</Button>
           </>
         }
       />
 
-      {conflicts && conflicts.length > 0 && <ConflictPanel className="mb-6" conflicts={conflicts} onChangeTime={() => navigate(editPath)} />}
+      {conflicts && conflicts.length > 0 && <ConflictPanel className="mb-6" conflicts={conflicts} onChangeTime={() => navigate(editPath)} onOverride={pendingStatus ? () => move(pendingStatus, true) : undefined} overriding={changeStatus.isPending} />}
 
       <Card as="section" className="mb-6">
         <CardHeader title="Progress" icon={PackageCheck} />
@@ -157,6 +156,8 @@ export default function BookingDetailPage() {
 
         <CalendarSyncCard booking={b} />
 
+        <ShareCard booking={b} />
+
         <Card as="section" className="md:col-span-2">
           <CardHeader title="Notes" icon={FileText} />
           {b.notes ? <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-ink-soft">{b.notes}</p> : <p className="text-sm text-ink-mute">No notes yet.</p>}
@@ -175,15 +176,7 @@ export default function BookingDetailPage() {
         />
       )}
       {confirm === 'delete' && (
-        <ConfirmDialog
-          title="Delete booking?"
-          description={`This will permanently delete ${b.booking_number} and remove its Google Calendar event. This can't be undone.`}
-          cancelLabel="Keep Booking"
-          confirmLabel="Delete Booking"
-          loading={remove.isPending}
-          onCancel={() => setConfirm(null)}
-          onConfirm={doDelete}
-        />
+        <DeleteBookingDialog booking={b} onClose={() => setConfirm(null)} onDeleted={() => navigate('/dashboard/bookings', { replace: true })} />
       )}
     </div>
   )
