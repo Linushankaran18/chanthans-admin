@@ -6,6 +6,7 @@ import type {
   BookingListResponse,
   BookingStatus,
 } from '../types/booking'
+import type { ShareLink } from '../types/share'
 
 export async function listBookings(params: BookingListParams): Promise<BookingListResponse> {
   const query: Record<string, string | number> = {}
@@ -41,13 +42,27 @@ export async function updateBooking(id: string, input: Partial<BookingInput>): P
   return data
 }
 
-export async function changeBookingStatus(id: string, status: BookingStatus): Promise<Booking> {
-  const { data } = await apiClient.patch<Booking>(`/admin/bookings/${id}/status`, { status })
+export async function changeBookingStatus(id: string, status: BookingStatus, allowOverlap = false): Promise<Booking> {
+  const { data } = await apiClient.patch<Booking>(`/admin/bookings/${id}/status`, { status, ...(allowOverlap && { allow_overlap: true }) })
   return data
 }
 
-export async function deleteBooking(id: string): Promise<void> {
-  await apiClient.delete(`/admin/bookings/${id}`)
+export async function deleteBooking(id: string, deleteInvoice = false): Promise<void> {
+  await apiClient.delete(`/admin/bookings/${id}`, { params: deleteInvoice ? { delete_invoice: true } : undefined })
+}
+
+export async function getBookingShare(id: string): Promise<ShareLink | null> {
+  const { data } = await apiClient.get<ShareLink | null>(`/admin/bookings/${id}/share`)
+  return data
+}
+
+export async function enableBookingShare(id: string): Promise<ShareLink> {
+  const { data } = await apiClient.post<ShareLink>(`/admin/bookings/${id}/share`)
+  return data
+}
+
+export async function revokeBookingShare(id: string): Promise<void> {
+  await apiClient.delete(`/admin/bookings/${id}/share`)
 }
 
 export async function retryCalendarSync(id: string): Promise<Booking> {

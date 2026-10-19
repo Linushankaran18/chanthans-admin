@@ -21,7 +21,7 @@ export function bookingToForm(b: Booking): BookingFormValues {
 }
 
 /** Form strings -> API payload. Empty optionals become null so edits can clear them. */
-export function formToInput(v: BookingFormValues, includeStatus: boolean): BookingInput {
+export function formToInput(v: BookingFormValues, includeStatus: boolean, allowOverlap = false): BookingInput {
   const input: BookingInput = {
     customer_name: v.customer_name.trim(),
     customer_email: v.customer_email.trim() || null,
@@ -37,5 +37,6 @@ export function formToInput(v: BookingFormValues, includeStatus: boolean): Booki
     notes: v.notes.trim() || null,
   }
   if (includeStatus) input.status = v.status
+  if (allowOverlap) input.allow_overlap = true
   return input
 }

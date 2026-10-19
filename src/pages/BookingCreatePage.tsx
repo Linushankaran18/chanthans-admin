@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { PageHeader } from '../components/ui/PageHeader'
 import { BookingForm } from '../components/bookings/BookingForm'
@@ -18,9 +18,12 @@ export default function BookingCreatePage() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [conflicts, setConflicts] = useState<BookingConflictItem[] | null>(null)
 
-  function submit(values: BookingFormValues) {
+  const lastValues = useRef<BookingFormValues | null>(null)
+
+  function submit(values: BookingFormValues, allowOverlap = false) {
+    lastValues.current = values
     setError(null); setConflicts(null); setFieldErrors({})
-    create.mutate(formToInput(values, true), {
+    create.mutate(formToInput(values, true, allowOverlap), {
       onSuccess: (b) => {
         toast.success('Booking created successfully.')
         navigate(`/dashboard/bookings/${b.id}`, { replace: true })
@@ -47,7 +50,8 @@ export default function BookingCreatePage() {
         fieldErrors={fieldErrors}
         conflicts={conflicts}
         cancelTo="/dashboard/bookings"
-        onSubmit={submit}
+        onSubmit={(v) => submit(v)}
+        onOverride={() => lastValues.current && submit(lastValues.current, true)}
       />
     </div>
   )

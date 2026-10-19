@@ -28,6 +28,8 @@ interface Props {
   conflicts: BookingConflictItem[] | null
   cancelTo: string
   onSubmit: (values: BookingFormValues) => void
+  /** Re-submit the last values while accepting the overlap. */
+  onOverride?: () => void
 }
 
 const CREATE_STATUSES: BookingStatus[] = ['INQUIRY', 'PENDING', 'CONFIRMED']
@@ -42,7 +44,7 @@ function Section({ title, icon, children, description }: { title: string; icon: 
   )
 }
 
-export function BookingForm({ mode, defaultValues, serviceTypes, submitting, errorMessage, fieldErrors = {}, conflicts, cancelTo, onSubmit }: Props) {
+export function BookingForm({ mode, defaultValues, serviceTypes, submitting, errorMessage, fieldErrors = {}, conflicts, cancelTo, onSubmit, onOverride }: Props) {
   const {
     register,
     handleSubmit,
@@ -81,7 +83,7 @@ export function BookingForm({ mode, defaultValues, serviceTypes, submitting, err
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5">
       {errorMessage && <Alert>{errorMessage}</Alert>}
-      {conflicts && conflicts.length > 0 && <ConflictPanel conflicts={conflicts} onChangeTime={changeTime} />}
+      {conflicts && conflicts.length > 0 && <ConflictPanel conflicts={conflicts} onChangeTime={changeTime} onOverride={onOverride} overriding={submitting} />}
 
       <Section title="Client" icon={User}>
         <div className="sm:col-span-2">

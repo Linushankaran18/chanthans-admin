@@ -1,8 +1,10 @@
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, Trash2 } from 'lucide-react'
 import type { BookingSummary } from '../../types/booking'
 import { StatusBadge } from '../ui/StatusBadge'
 import { Avatar } from './Avatar'
+import { DeleteBookingDialog } from './DeleteBookingDialog'
 import { formatDate, formatMoney, formatTimeRange } from '../../utils/format'
 
 const th = 'px-4 py-3 text-left text-[0.66rem] font-medium uppercase tracking-[0.2em] text-ink-mute'
@@ -14,12 +16,12 @@ export function BookingTable({ bookings }: { bookings: BookingSummary[] }) {
         <caption className="sr-only">Bookings</caption>
         <thead className="border-b border-line bg-cream/70">
           <tr>
-            <th scope="col" className={`${th} w-[25%]`}>Customer</th>
+            <th scope="col" className={`${th} w-[23%]`}>Customer</th>
             <th scope="col" className={`${th} w-[15%]`}>Service</th>
-            <th scope="col" className={`${th} w-[17%]`}>Date &amp; time</th>
-            <th scope="col" className={`${th} w-[17%]`}>Status</th>
-            <th scope="col" className={`${th} w-[18%]`}>Paid / total</th>
-            <th scope="col" className={`${th} w-[8%]`}><span className="sr-only">Actions</span></th>
+            <th scope="col" className={`${th} w-[16%]`}>Date &amp; time</th>
+            <th scope="col" className={`${th} w-[16%]`}>Status</th>
+            <th scope="col" className={`${th} w-[17%]`}>Paid / total</th>
+            <th scope="col" className={`${th} w-[12%]`}><span className="sr-only">Actions</span></th>
           </tr>
         </thead>
         <tbody className="divide-y divide-line">
@@ -33,9 +35,10 @@ export function BookingTable({ bookings }: { bookings: BookingSummary[] }) {
 export function BookingRow({ booking: b }: { booking: BookingSummary }) {
   const navigate = useNavigate()
   const href = `/dashboard/bookings/${b.id}`
+  const [deleting, setDeleting] = useState(false)
   return (
     <tr
-      onClick={(e) => { if (!(e.target as HTMLElement).closest('a')) navigate(href) }}
+      onClick={(e) => { if (!(e.target as HTMLElement).closest('a,button')) navigate(href) }}
       className="group cursor-pointer transition-colors hover:bg-cream/70"
     >
       <td className="px-4 py-3.5">
@@ -57,7 +60,11 @@ export function BookingRow({ booking: b }: { booking: BookingSummary }) {
         <span className="font-medium text-ink">{formatMoney(b.deposit_amount ?? 0)}</span>
         <span className="text-ink-mute"> / {formatMoney(b.total_amount)}</span>
       </td>
-      <td className="px-4 py-3.5 text-right">
+      <td className="px-2 py-3.5 text-right">
+        <button type="button" onClick={() => setDeleting(true)} aria-label={`Delete booking ${b.booking_number} for ${b.customer_name}`} className="inline-flex h-11 w-11 items-center justify-center rounded-full text-ink-mute transition-all hover:bg-danger-soft hover:text-danger">
+          <Trash2 className="h-4 w-4" aria-hidden />
+        </button>
+        {deleting && <div onClick={(e) => e.stopPropagation()}><DeleteBookingDialog booking={b} onClose={() => setDeleting(false)} /></div>}
         <Link to={href} aria-label={`View booking ${b.booking_number} for ${b.customer_name}`} className="inline-flex h-11 w-11 items-center justify-center rounded-full text-ink-mute transition-all hover:bg-cream-deep hover:text-accent">
           <ArrowRight className="h-4 w-4" aria-hidden />
         </Link>

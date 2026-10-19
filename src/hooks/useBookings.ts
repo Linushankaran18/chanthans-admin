@@ -3,10 +3,13 @@ import {
   changeBookingStatus,
   createBooking,
   deleteBooking,
+  enableBookingShare,
   getBooking,
+  getBookingShare,
   listBookings,
   listServiceTypes,
   retryCalendarSync,
+  revokeBookingShare,
   updateBooking,
 } from '../api/bookings'
 import type { Booking, BookingInput, BookingListParams, BookingStatus } from '../types/booking'
@@ -18,6 +21,7 @@ export const bookingKeys = {
   list: (params: BookingListParams) => [...BOOKINGS_KEY, 'list', params] as const,
   detail: (id: string) => [...BOOKINGS_KEY, 'detail', id] as const,
   serviceTypes: () => [...BOOKINGS_KEY, 'service-types'] as const,
+  share: (id: string) => [...BOOKINGS_KEY, 'share', id] as const,
 }
 
 export function useBookingList(params: BookingListParams) {
@@ -75,7 +79,8 @@ export function useUpdateBooking() {
 export function useChangeBookingStatus() {
   const after = useAfterWrite()
   return useMutation({
-    mutationFn: (vars: { id: string; status: BookingStatus }) => changeBookingStatus(vars.id, vars.status),
+    mutationFn: (vars: { id: string; status: BookingStatus; allowOverlap?: boolean }) =>
+      changeBookingStatus(vars.id, vars.status, vars.allowOverlap),
     onSuccess: (b) => after(b),
   })
 }
@@ -91,12 +96,41 @@ export function useRetryCalendarSync() {
 export function useDeleteBooking() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => deleteBooking(id),
-    onSuccess: (_d, id) => {
-      qc.removeQueries({ queryKey: bookingKeys.detail(id) })
+    mutationFn: (vars: { id: string; deleteInvoice?: boolean }) => deleteBooking(vars.id, vars.deleteInvoice),
+    onSuccess: (_d, vars) => {
+      qc.removeQueries({ queryKey: bookingKeys.detail(vars.id) })
+      qc.removeQueries({ queryKey: bookingKeys.share(vars.id) })
       qc.invalidateQueries({ queryKey: bookingKeys.lists() })
+      // The booking's invoice may have gone with it.
+      qc.invalidateQueries({ queryKey: ['invoices'] })
       qc.invalidateQueries({ queryKey: DASHBOARD_KEY })
       qc.invalidateQueries({ queryKey: bookingKeys.serviceTypes() })
+    },
+  })
+}
+
+export function useBookingShare(id: string | undefined, enabled: boolean) {
+  return useQuery({ queryKey: bookingKeys.share(id ?? ''), queryFn: () => getBookingShare(id as string), enabled: !!id && enabled })
+}
+
+export function useEnableShare() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => enableBookingShare(id),
+    onSuccess: (link, id) => {
+      qc.setQueryData(bookingKeys.share(id), link)
+      qc.setQueryData<Booking>(bookingKeys.detail(id), (b) => (b ? { ...b, is_shared: true } : b))
+    },
+  })
+}
+
+export function useRevokeShare() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => revokeBookingShare(id),
+    onSuccess: (_d, id) => {
+      qc.setQueryData(bookingKeys.share(id), null)
+      qc.setQueryData<Booking>(bookingKeys.detail(id), (b) => (b ? { ...b, is_shared: false } : b))
     },
   })
 }

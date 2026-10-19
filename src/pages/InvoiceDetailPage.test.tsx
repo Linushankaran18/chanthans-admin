@@ -93,12 +93,13 @@ describe('InvoiceDetailPage', () => {
     expect(screen.getByRole('link', { name: /edit/i })).toBeInTheDocument()
     expect(btn(/mark as paid/i)).not.toBeInTheDocument()
     await openMenu(user)
-    expect(screen.getByRole('menuitem', { name: 'Delete invoice' })).toBeInTheDocument()
+    expect(btn('Delete')).toBeInTheDocument() // visible, not tucked into the menu
+    expect(screen.queryByRole('menuitem', { name: 'Delete invoice' })).not.toBeInTheDocument()
     expect(screen.getByRole('menuitem', { name: 'Cancel invoice' })).toBeInTheDocument()
     expect(screen.queryByRole('menuitem', { name: 'Record payment' })).not.toBeInTheDocument()
   })
 
-  it('issued: can mark paid, record payment, cancel; cannot issue or delete', async () => {
+  it('issued: can mark paid, record payment, cancel; cannot issue', async () => {
     load(makeInvoice({ status: 'ISSUED', display_status: 'ISSUED', amount_paid: 0 }))
     const user = userEvent.setup()
     await screen.findByRole('article')
@@ -107,7 +108,7 @@ describe('InvoiceDetailPage', () => {
     await openMenu(user)
     expect(screen.getByRole('menuitem', { name: 'Record payment' })).toBeInTheDocument()
     expect(screen.getByRole('menuitem', { name: 'Cancel invoice' })).toBeInTheDocument()
-    expect(screen.queryByRole('menuitem', { name: 'Delete invoice' })).not.toBeInTheDocument()
+    expect(btn('Delete')).toBeInTheDocument()
   })
 
   it('paid: no mark-as-paid or cancel', async () => {
@@ -125,8 +126,8 @@ describe('InvoiceDetailPage', () => {
     await screen.findByRole('article')
     expect(screen.queryByRole('link', { name: /edit/i })).not.toBeInTheDocument()
     expect(btn(/download pdf/i)).toBeInTheDocument()
+    expect(btn('Delete')).toBeInTheDocument()
     await openMenu(user)
-    expect(screen.getByRole('menuitem', { name: 'Delete invoice' })).toBeInTheDocument()
     expect(screen.queryByRole('menuitem', { name: 'Record payment' })).not.toBeInTheDocument()
   })
 
@@ -176,6 +177,46 @@ describe('InvoiceDetailPage', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Save payment' }))
     expect(await within(dialog).findByText(/cannot be more than the invoice total/i)).toBeInTheDocument()
     expect(recordInvoicePayment).not.toHaveBeenCalled()
+  })
+
+  it('delete: a draft is deleted after confirmation', async () => {
+    const inv = makeInvoice({ status: 'DRAFT', display_status: 'DRAFT', amount_paid: 0 })
+    vi.mocked(deleteInvoice).mockResolvedValue(undefined)
+    load(inv)
+    const user = userEvent.setup()
+    await user.click(await screen.findByRole('button', { name: 'Delete' }))
+    const dialog = await screen.findByRole('alertdialog')
+    expect(deleteInvoice).not.toHaveBeenCalled()
+    await user.click(within(dialog).getByRole('button', { name: 'Delete Invoice' }))
+    await waitFor(() => expect(deleteInvoice).toHaveBeenCalledWith('inv-1'))
+    expect(changeInvoiceStatus).not.toHaveBeenCalled()
+  })
+
+  it('delete: an issued, unpaid invoice is cancelled first, then deleted', async () => {
+    const inv = makeInvoice({ status: 'ISSUED', display_status: 'ISSUED', amount_paid: 0, balance_due: 3107.5 })
+    vi.mocked(changeInvoiceStatus).mockResolvedValue({ ...inv, status: 'CANCELLED', display_status: 'CANCELLED' })
+    vi.mocked(deleteInvoice).mockResolvedValue(undefined)
+    load(inv)
+    const user = userEvent.setup()
+    await user.click(await screen.findByRole('button', { name: 'Delete' }))
+    const dialog = await screen.findByRole('alertdialog')
+    expect(dialog).toHaveTextContent('cancelled and then permanently deleted')
+    await user.click(within(dialog).getByRole('button', { name: 'Delete Invoice' }))
+    await waitFor(() => expect(deleteInvoice).toHaveBeenCalledWith('inv-1'))
+    expect(changeInvoiceStatus).toHaveBeenCalledWith('inv-1', 'CANCELLED')
+    expect(vi.mocked(changeInvoiceStatus).mock.invocationCallOrder[0]).toBeLessThan(vi.mocked(deleteInvoice).mock.invocationCallOrder[0])
+  })
+
+  it('delete: an invoice with payments is explained, never deleted', async () => {
+    load(makeInvoice({ status: 'PARTIALLY_PAID', display_status: 'PARTIALLY_PAID', amount_paid: 500 }))
+    const user = userEvent.setup()
+    await user.click(await screen.findByRole('button', { name: 'Delete' }))
+    const dialog = await screen.findByRole('alertdialog')
+    expect(dialog).toHaveTextContent('has payments recorded')
+    expect(within(dialog).queryByRole('button', { name: 'Delete Invoice' })).not.toBeInTheDocument()
+    await user.click(within(dialog).getByRole('button', { name: 'OK' }))
+    expect(deleteInvoice).not.toHaveBeenCalled()
+    expect(changeInvoiceStatus).not.toHaveBeenCalled()
   })
 
   it('shows not-found and error states', async () => {
